@@ -1,0 +1,9 @@
+sqlalchemy
+ollama
+feedparser
+yt-dlp
+flask
+python-dotenv
+pandas
+beautifulsoup4
+requests

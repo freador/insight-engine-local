@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightEngine | Daily Intel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            margin-top: 30px;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .insights-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .insight-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 16px;
+            position: relative;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .source-tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .title:hover {
+            color: var(--accent-color);
+        }
+
+        .summary {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metadata {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .score-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .score-high { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .score-mid { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .score-low { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .btn-read {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-read:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.4s ease;
+        }
+
+        #empty-state {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-secondary);
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .settings-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .form-group input, .form-group select {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            flex-grow: 1;
+            font-family: inherit;
+        }
+
+        .source-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .source-item:last-child { border-bottom: none; }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>InsightEngine</h1>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
+                <button class="tab-btn" onclick="showTab('settings')">Settings</button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard">
+            <div class="dashboard-header">
+                <div class="metadata" id="stats">Loading intel...</div>
+                <button id="refresh-btn" class="btn-read" onclick="runPipeline()">Update Intel</button>
+            </div>
+            
+            <div id="pipeline-loader" style="display: none; margin-bottom: 20px; color: var(--accent-color); font-size: 0.9rem;">
+                <span class="spinner"></span> Refining content with Llama 3...
+            </div>
+
+            <div class="section-label">Topics</div>
+            <div class="filters" id="category-filters">
+                <!-- Category buttons will be injected here -->
+            </div>
+
+            <div class="section-label">Sources</div>
+            <div class="filters" id="source-chips">
+                <!-- Source chips will be injected here -->
+            </div>
+
+            <div id="insights-grid" class="insights-grid">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="tab-settings" style="display: none;">
+            <div class="settings-panel">
+                <h3>Add New Source</h3>
+                <div class="form-group">
+                    <input type="text" id="new-url" placeholder="URL (RSS or YouTube Channel)">
+                    <select id="new-type">
+                        <option value="RSS">RSS</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="Scraper">Web Scraper (No RSS)</option>
+                    </select>
+                    <input type="text" id="new-category" placeholder="Category (Finance, Games, etc.)" style="max-width: 150px;">
+                    <input type="number" id="new-limit" value="10" min="1" max="50" style="max-width: 80px;" title="Item limit">
+                    <button class="btn-read" onclick="addNewSource()">Add Source</button>
+                </div>
+                
+                <h3 style="margin-top: 40px;">Current Sources</h3>
+                <div id="sources-list" class="sources-list">
+                    <!-- List of sources with delete buttons -->
+                </div>
+            </div>
+        </div>
+
+        <div id="empty-state" style="display: none;">
+            <h2>All caught up!</h2>
+            <p>No new insights found. Run the pipeline to refresh.</p>
+        </div>
+    </div>
+
+    <script>
+        let allInsights = [];
+        let currentCategory = 'all';
+        let currentSource = 'all';
+
+        async function loadInsights() {
+            try {
+                const response = await fetch('/api/insights');
+                allInsights = await response.json();
+                renderCategoryFilters();
+                renderSourceChips();
+                applyFilters();
+                updateStats();
+            } catch (error) {
+                console.error("Error loading insights:", error);
+            }
+        }
+
+        async function loadSources() {
+            try {
+                const response = await fetch('/api/sources');
+                const sources = await response.json();
+                const container = document.getElementById('sources-list');
+                container.innerHTML = '';
+                
+                sources.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'source-item';
+                    item.innerHTML = `
+                        <div>
+                            <strong>[${s.category}]</strong> ${s.url} <small>(${s.type} • Limit: ${s.item_limit})</small>
+                        </div>
+                        <button class="btn-delete" onclick="removeSource(${s.id})">Delete</button>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Error loading sources:", error);
+            }
+        }
+
+        async function addNewSource() {
+            const url = document.getElementById('new-url').value;
+            const type = document.getElementById('new-type').value;
+            const category = document.getElementById('new-category').value || 'General';
+            const limit = document.getElementById('new-limit').value || 10;
+            
+            if (!url) return alert("Please enter a URL");
+
+            await fetch('/api/sources', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url, type, category, limit })
+            });
+            
+            document.getElementById('new-url').value = '';
+            document.getElementById('new-category').value = '';
+            document.getElementById('new-limit').value = 10;
+            loadSources();
+        }
+
+        async function removeSource(id) {
+            if (!confirm("Remove this source?")) return;
+            await fetch(`/api/sources/delete/${id}`, { method: 'POST' });
+            loadSources();
+        }
+
+        function showTab(tab) {
+            document.getElementById('tab-dashboard').style.display = tab === 'dashboard' ? 'block' : 'none';
+            document.getElementById('tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.toLowerCase() === tab);
+            });
+            
+            if (tab === 'settings') loadSources();
+            if (tab === 'dashboard') loadInsights();
+        }
+
+        function renderSourceChips() {
+            const container = document.getElementById('source-chips');
+            const sources = [...new Set(allInsights.map(i => i.source))].sort();
+            
+            container.innerHTML = `<button class="filter-btn ${currentSource === 'all' ? 'active' : ''}" onclick="filterBySource('all')">All Sources</button>`;
+            
+            sources.forEach(source => {
+                const isActive = currentSource === source ? 'active' : '';
+                container.innerHTML += `<button class="filter-btn ${isActive}" onclick="filterBySource('${source.replace(/'/g, "\\'")}')">${source}</button>`;
+            });
+        }
+
+        function renderInsights(data) {
+            const grid = document.getElementById('insights-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            grid.innerHTML = '';
+            
+            if (data.length === 0) {
+                if (currentType === 'all' && currentSource === 'all') {
+                    emptyState.style.display = 'block';
+                }
+                return;
+            } else {
+                emptyState.style.display = 'none';
+            }
+
+            data.forEach(item => {
+                const scoreClass = item.relevance_score >= 8 ? 'score-high' : (item.relevance_score >= 5 ? 'score-mid' : 'score-low');
+                
+                const card = document.createElement('div');
+                card.className = 'insight-card';
+                card.id = `insight-${item.id}`;
+                card.innerHTML = `
+                    <span class="source-tag">${item.source}</span>
+                    <a href="${item.url}" target="_blank" class="title">${item.title}</a>
+                    <p class="summary">${item.summary}</p>
+                    <div class="card-footer">
+                        <div class="metadata">
+                            <span class="score-badge ${scoreClass}">${item.relevance_score}/10</span>
+                            &nbsp; • &nbsp; ${item.published_at}
+                        </div>
+                        <button class="btn-read" onclick="markRead(${item.id})">Mark as Read</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function markRead(id) {
+            const card = document.getElementById(`insight-${id}`);
+            card.classList.add('fade-out');
+            
+            setTimeout(async () => {
+                await fetch(`/api/read/${id}`, { method: 'POST' });
+                allInsights = allInsights.filter(i => i.id !== id);
+                card.remove();
+                renderSourceChips();
+                updateStats();
+                if (allInsights.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            }, 400);
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            const categories = [...new Set(allInsights.map(i => i.category))].sort();
+            
+            container.innerHTML = `<button class="filter-btn ${currentCategory === 'all' ? 'active' : ''}" onclick="filterByCategory('all')">All Topics</button>`;
+            
+            categories.forEach(cat => {
+                const isActive = currentCategory === cat ? 'active' : '';
+                container.innerHTML += `<button class="filter-btn ${isActive}" onclick="filterByCategory('${cat}')">${cat}</button>`;
+            });
+        }
+
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            currentSource = 'all';
+            updateActiveButtons('category-filters', cat === 'all' ? 'All Topics' : cat);
+            renderSourceChips();
+            applyFilters();
+        }
+
+        function filterBySource(source) {
+            currentSource = source;
+            updateActiveButtons('source-chips', source === 'all' ? 'All Sources' : source);
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = allInsights;
+            if (currentCategory !== 'all') filtered = filtered.filter(i => i.category === currentCategory);
+            if (currentSource !== 'all') filtered = filtered.filter(i => i.source === currentSource);
+            renderInsights(filtered);
+        }
+
+        function updateActiveButtons(containerId, activeText) {
+            document.querySelectorAll(`#${containerId} .filter-btn`).forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.innerText === activeText) btn.classList.add('active');
+            });
+        }
+
+        function updateStats() {
+            const stats = document.getElementById('stats');
+            if (stats) stats.innerText = `${allInsights.length} Unread Insights`;
+        }
+
+        async function runPipeline() {
+            const btn = document.getElementById('refresh-btn');
+            btn.disabled = true;
+            btn.innerText = 'Starting...';
+            
+            await fetch('/api/pipeline/run', { method: 'POST' });
+            checkPipelineStatus();
+        }
+
+        async function checkPipelineStatus() {
+            const response = await fetch('/api/pipeline/status');
+            const status = await response.json();
+            
+            const loader = document.getElementById('pipeline-loader');
+            const btn = document.getElementById('refresh-btn');
+            
+            if (status.running) {
+                loader.style.display = 'block';
+                btn.disabled = true;
+                btn.innerText = 'Updating...';
+                // Poll again in 5s
+                setTimeout(checkPipelineStatus, 5000);
+            } else {
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = 'Update Intel';
+                // If it just stopped, refresh the list
+                loadInsights();
+            }
+        }
+
+        // Initial Load
+        loadInsights();
+        checkPipelineStatus();
+    </script>
+</body>
+</html>
