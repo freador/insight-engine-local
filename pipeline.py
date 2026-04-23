@@ -19,10 +19,10 @@ def run_pipeline():
         return
 
     # Organize sources by type for efficient collection
-    # We pass the official 'name' (if exists) or a clean version of the URL
     rss_list = []
     yt_list = []
     scraper_list = []
+    github_list = []
 
     for s in db_sources:
         # Determine a clean display name if none provided
@@ -43,6 +43,7 @@ def run_pipeline():
         if s.type == 'RSS': rss_list.append(source_info)
         elif s.type == 'YouTube': yt_list.append(source_info)
         elif s.type == 'Scraper': scraper_list.append(source_info)
+        elif s.type == 'GitHub': github_list.append(source_info)
 
     # 3. Run Collectors
     print(f"\nRunning Collectors ({len(db_sources)} sources)...")
@@ -52,6 +53,9 @@ def run_pipeline():
         collect_youtube(yt_list)
     if scraper_list:
         collect_scraper(scraper_list)
+    if github_list:
+        from collectors.github import collect_github
+        collect_github(github_list)
     
     # 4. Run Refiner
     print("\nRunning Intelligence Refinement...")

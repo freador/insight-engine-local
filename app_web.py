@@ -1,7 +1,8 @@
 import threading
 from flask import Flask, render_template, jsonify, request
-from core.db import get_dashboard_data, mark_as_read, get_sources, add_source, delete_source
+from core.db import get_dashboard_data, mark_as_read, get_sources, add_source, delete_source, get_sources_with_counts, update_source
 from pipeline import run_pipeline
+from core.summarizer import generate_daily_summary
 import pandas as pd
 
 app = Flask(__name__)
@@ -48,15 +49,17 @@ def api_insights():
     insights = []
     for row in data:
         item = dict(row._mapping)
-        if item['published_at']:
+        if item.get('created_at'):
+            item['created_at'] = item['created_at'].isoformat()
+        
+        if item.get('published_at'):
             item['published_at'] = item['published_at'].strftime('%Y-%m-%d %H:%M')
-        else:
-            item['published_at'] = 'Unknown'
         
         # Determine type for icon/badge logic
         raw_source = item['source']
         if raw_source.startswith("YouTube: "): item['type'] = "YouTube"
         elif raw_source.startswith("Scraper: "): item['type'] = "Scraper"
+        elif raw_source.startswith("GitHub: "): item['type'] = "GitHub"
         else: item['type'] = "RSS"
 
         # FORCE OFFICIAL NAME AND CATEGORY
@@ -85,8 +88,8 @@ def api_mark_read(insight_id):
 
 @app.route('/api/sources')
 def api_get_sources():
-    db_sources = get_sources()
-    return jsonify([dict(row._mapping) for row in db_sources])
+    db_sources = get_sources_with_counts()
+    return jsonify(db_sources)
 
 @app.route('/api/sources', methods=['POST'])
 def api_add_source():
@@ -106,10 +109,28 @@ def api_add_source():
     else:
         return jsonify({"status": "error", "message": "Source already exists"}), 400
 
+@app.route('/api/sources/update/<int:source_id>', methods=['POST'])
+def api_update_source(source_id):
+    data = request.json
+    # Clean up data to only include valid columns
+    valid_fields = ['url', 'type', 'category', 'item_limit', 'name']
+    update_data = {k: v for k, v in data.items() if k in valid_fields}
+    
+    if 'item_limit' in update_data:
+        update_data['item_limit'] = int(update_data['item_limit'])
+        
+    update_source(source_id, **update_data)
+    return jsonify({"status": "success"})
+
 @app.route('/api/sources/delete/<int:source_id>', methods=['POST'])
 def api_delete_source(source_id):
     delete_source(source_id)
     return jsonify({"status": "success"})
+
+@app.route('/api/summary/daily')
+def api_daily_summary():
+    summary = generate_daily_summary()
+    return jsonify(summary)
 
 if __name__ == '__main__':
     # Start pipeline once on startup

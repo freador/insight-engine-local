@@ -34,18 +34,38 @@ def collect_scraper(urls_with_limits):
                 
                 if url in seen_urls or title in seen_titles: continue
                 
-                if len(title) > 30 and main_domain in urlparse(url).netloc:
-                    # Look for category label
+                # HEURISTICS FOR A PORTAL NEWS LINK:
+                # 1. Title must be substantial
+                # 2. Link must belong to the same main domain
+                # 3. Avoid obvious menu/utility/social links and portal-specific service ads
+                forbidden_words = [
+                    'login', 'assine', 'termos', 'privacidade', 'account', 'subscribe', 
+                    'newsletter', 'facebook', 'twitter', 'linkedin', 'uolplay', 
+                    'uolmail', 'pagbank', 'uol-afiliados', 'bate-papo', 'shopping',
+                    'patrocinado', 'web-stories', 'ofertas', 'promocao'
+                ]
+                
+                is_valid_portal_link = (
+                    len(title) > 28 and 
+                    main_domain in urlparse(url).netloc and
+                    not any(word in url.lower() for word in forbidden_words)
+                )
+
+                if is_valid_portal_link:
+                    # Try to find category context
                     category_label = ""
-                    parent = a_tag.parent
-                    label_candidate = parent.find_previous_sibling(['span', 'p', 'div'])
-                    if not label_candidate:
-                        label_candidate = parent.find(['span', 'p'], class_=True)
-                    
-                    if label_candidate:
-                        lbl = label_candidate.get_text().strip().upper()
-                        if 2 < len(lbl) < 20:
-                            category_label = lbl
+                    # Enhanced category detection: look for nearby links with specific classes or small text
+                    container = a_tag.find_parent(['div', 'article', 'section'])
+                    if container:
+                        # TechCrunch and others often put category in a specific span or small link above
+                        label_tag = container.find(['span', 'a'], class_=lambda x: x and ('category' in x or 'kicker' in x))
+                        if not label_tag:
+                            label_tag = a_tag.find_previous(['span', 'a'])
+                        
+                        if label_tag:
+                            lbl = label_tag.get_text().strip().upper()
+                            if 2 < len(lbl) < 20 and lbl != title.upper():
+                                category_label = lbl
 
                     # Final title includes the label for context
                     final_title = f"[{category_label}] {title}" if category_label else title

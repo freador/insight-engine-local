@@ -270,6 +270,47 @@
             background: #ef4444;
             color: white;
         }
+
+        .btn-edit {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .edit-form {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .count-badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-color);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -291,6 +332,157 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Summary Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .summary-section {
+            margin-bottom: 30px;
+        }
+
+        .summary-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .summary-section h3 {
+            font-size: 1.2rem;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+        }
+
+        .summary-text {
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+
+        .btn-summary {
+            background: linear-gradient(to right, #818cf8, #38bdf8);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-summary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-summary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Summary Tab Styles */
+        .summary-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        .summary-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .summary-tab-btn.active {
+            color: var(--accent-color);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .summary-content-pane {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .summary-content-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Better formatting for AI content */
+        .summary-text {
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .summary-text ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-text h3 {
+            color: var(--text-primary);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -307,11 +499,22 @@
         <div id="tab-dashboard">
             <div class="dashboard-header">
                 <div class="metadata" id="stats">Loading intel...</div>
-                <button id="refresh-btn" class="btn-read" onclick="runPipeline()">Update Intel</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="summary-btn" class="btn-summary" onclick="generateSummary()">
+                        ✨ Resumo do Dia
+                    </button>
+                    <button id="refresh-btn" class="btn-read" onclick="runPipeline()">Update Intel</button>
+                </div>
             </div>
             
             <div id="pipeline-loader" style="display: none; margin-bottom: 20px; color: var(--accent-color); font-size: 0.9rem;">
                 <span class="spinner"></span> Refining content with Llama 3...
+            </div>
+
+            <div class="section-label">Order</div>
+            <div class="filters" id="sort-filters">
+                <button class="filter-btn" onclick="setSort('top')">Top Insights</button>
+                <button class="filter-btn" onclick="setSort('recent')">Latest Arrivals</button>
             </div>
 
             <div class="section-label">Topics</div>
@@ -339,13 +542,17 @@
                         <option value="RSS">RSS</option>
                         <option value="YouTube">YouTube</option>
                         <option value="Scraper">Web Scraper (No RSS)</option>
+                        <option value="GitHub">GitHub Trending</option>
                     </select>
                     <input type="text" id="new-category" placeholder="Category (Finance, Games, etc.)" style="max-width: 150px;">
                     <input type="number" id="new-limit" value="10" min="1" max="50" style="max-width: 80px;" title="Item limit">
                     <button class="btn-read" onclick="addNewSource()">Add Source</button>
                 </div>
                 
-                <h3 style="margin-top: 40px;">Current Sources</h3>
+                <div class="settings-header" style="margin-top: 40px;">
+                    <h3>Current Sources</h3>
+                    <button class="btn-read" onclick="runPipeline()" id="refresh-btn-settings">Update All Sources</button>
+                </div>
                 <div id="sources-list" class="sources-list">
                     <!-- List of sources with delete buttons -->
                 </div>
@@ -362,6 +569,7 @@
         let allInsights = [];
         let currentCategory = 'all';
         let currentSource = 'all';
+        let currentSort = localStorage.getItem('insightSort') || 'top';
 
         async function loadInsights() {
             try {
@@ -369,6 +577,7 @@
                 allInsights = await response.json();
                 renderCategoryFilters();
                 renderSourceChips();
+                updateActiveButtons('sort-filters', currentSort === 'top' ? 'Top Insights' : 'Latest Arrivals');
                 applyFilters();
                 updateStats();
             } catch (error) {
@@ -385,12 +594,37 @@
                 
                 sources.forEach(s => {
                     const item = document.createElement('div');
-                    item.className = 'source-item';
+                    item.className = 'source-container';
                     item.innerHTML = `
-                        <div>
-                            <strong>[${s.category}]</strong> ${s.url} <small>(${s.type} • Limit: ${s.item_limit})</small>
+                        <div class="source-item" id="source-${s.id}">
+                            <div>
+                                <strong>[${s.category}]</strong> ${s.name || s.url} 
+                                <span class="count-badge">${s.article_count} items</span>
+                                <br>
+                                <small style="color: var(--text-secondary)">${s.url} (${s.type} • Limit: ${s.item_limit})</small>
+                            </div>
+                            <div>
+                                <button class="btn-edit" onclick="toggleEdit(${s.id})">Edit</button>
+                                <button class="btn-delete" onclick="removeSource(${s.id})">Delete</button>
+                            </div>
                         </div>
-                        <button class="btn-delete" onclick="removeSource(${s.id})">Delete</button>
+                        <div class="edit-form" id="edit-${s.id}">
+                            <div class="form-group" style="margin-top: 0;">
+                                <input type="text" id="edit-url-${s.id}" value="${s.url}" placeholder="URL">
+                                <select id="edit-type-${s.id}">
+                                    <option value="RSS" ${s.type === 'RSS' ? 'selected' : ''}>RSS</option>
+                                    <option value="YouTube" ${s.type === 'YouTube' ? 'selected' : ''}>YouTube</option>
+                                    <option value="Scraper" ${s.type === 'Scraper' ? 'selected' : ''}>Web Scraper</option>
+                                    <option value="GitHub" ${s.type === 'GitHub' ? 'selected' : ''}>GitHub</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="edit-category-${s.id}" value="${s.category}" placeholder="Category">
+                                <input type="number" id="edit-limit-${s.id}" value="${s.item_limit}" title="Per-run limit">
+                                <button class="btn-read" onclick="saveEdit(${s.id})">Save</button>
+                                <button class="filter-btn" onclick="toggleEdit(${s.id})">Cancel</button>
+                            </div>
+                        </div>
                     `;
                     container.appendChild(item);
                 });
@@ -422,6 +656,30 @@
         async function removeSource(id) {
             if (!confirm("Remove this source?")) return;
             await fetch(`/api/sources/delete/${id}`, { method: 'POST' });
+            loadSources();
+        }
+
+        function toggleEdit(id) {
+            const item = document.getElementById(`source-${id}`);
+            const form = document.getElementById(`edit-${id}`);
+            const isEditing = form.style.display === 'block';
+            
+            form.style.display = isEditing ? 'none' : 'block';
+            item.style.display = isEditing ? 'flex' : 'none';
+        }
+
+        async function saveEdit(id) {
+            const url = document.getElementById(`edit-url-${id}`).value;
+            const type = document.getElementById(`edit-type-${id}`).value;
+            const category = document.getElementById(`edit-category-${id}`).value;
+            const limit = document.getElementById(`edit-limit-${id}`).value;
+            
+            await fetch(`/api/sources/update/${id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url, type, category, item_limit: limit })
+            });
+            
             loadSources();
         }
 
@@ -528,10 +786,28 @@
             applyFilters();
         }
 
+        function setSort(sort) {
+            currentSort = sort;
+            localStorage.setItem('insightSort', sort);
+            updateActiveButtons('sort-filters', sort === 'top' ? 'Top Insights' : 'Latest Arrivals');
+            applyFilters();
+        }
+
         function applyFilters() {
-            let filtered = allInsights;
+            let filtered = [...allInsights];
             if (currentCategory !== 'all') filtered = filtered.filter(i => i.category === currentCategory);
             if (currentSource !== 'all') filtered = filtered.filter(i => i.source === currentSource);
+            
+            // Apply sorting
+            if (currentSort === 'top') {
+                filtered.sort((a, b) => {
+                    if (b.relevance_score !== a.relevance_score) return b.relevance_score - a.relevance_score;
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+            } else {
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            
             renderInsights(filtered);
         }
 
@@ -561,26 +837,138 @@
             const status = await response.json();
             
             const loader = document.getElementById('pipeline-loader');
-            const btn = document.getElementById('refresh-btn');
+            const btnDash = document.getElementById('refresh-btn');
+            const btnSettings = document.getElementById('refresh-btn-settings');
             
             if (status.running) {
                 loader.style.display = 'block';
-                btn.disabled = true;
-                btn.innerText = 'Updating...';
+                if (btnDash) {
+                    btnDash.disabled = true;
+                    btnDash.innerText = 'Updating...';
+                }
+                if (btnSettings) {
+                    btnSettings.disabled = true;
+                    btnSettings.innerText = 'Updating...';
+                }
                 // Poll again in 5s
                 setTimeout(checkPipelineStatus, 5000);
             } else {
                 loader.style.display = 'none';
-                btn.disabled = false;
-                btn.innerText = 'Update Intel';
+                if (btnDash) {
+                    btnDash.disabled = false;
+                    btnDash.innerText = 'Update Intel';
+                }
+                if (btnSettings) {
+                    btnSettings.disabled = false;
+                    btnSettings.innerText = 'Update All Sources';
+                }
                 // If it just stopped, refresh the list
                 loadInsights();
+                loadSources();
             }
         }
 
         // Initial Load
         loadInsights();
         checkPipelineStatus();
+
+        async function generateSummary() {
+            const btn = document.getElementById('summary-btn');
+            const overlay = document.getElementById('summary-modal');
+            const content = document.getElementById('summary-content');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Analisando...';
+            
+            try {
+                const response = await fetch('/api/summary/daily');
+                const data = await response.json();
+                
+                let tabsHtml = `<div class="summary-tabs">`;
+                tabsHtml += `<button class="summary-tab-btn active" onclick="switchSummaryTab('general')">Geral</button>`;
+                
+                let contentHtml = `
+                    <div id="summary-pane-general" class="summary-content-pane active">
+                        <div class="summary-section">
+                            <h2>Síntese Executiva Global</h2>
+                            <div class="summary-text">${formatMarkdown(data.global)}</div>
+                        </div>
+                    </div>
+                `;
+                
+                for (const [cat, text] of Object.entries(data.categories)) {
+                    const tabId = cat.toLowerCase().replace(/\s+/g, '-');
+                    tabsHtml += `<button class="summary-tab-btn" onclick="switchSummaryTab('${tabId}')">${cat}</button>`;
+                    contentHtml += `
+                        <div id="summary-pane-${tabId}" class="summary-content-pane">
+                            <div class="summary-section">
+                                <h2>Relatório: ${cat}</h2>
+                                <div class="summary-text">${formatMarkdown(text)}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                tabsHtml += `</div>`;
+                content.innerHTML = tabsHtml + contentHtml;
+                overlay.style.display = 'flex';
+            } catch (error) {
+                alert("Erro ao gerar resumo. Verifique se o Ollama está rodando.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '✨ Resumo do Dia';
+            }
+        }
+
+        function formatMarkdown(text) {
+            // Simple markdown-ish formatting for bullet points and headers
+            return text
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/gms, '<ul>$1</ul>')
+                .replace(/\n\n/g, '<br><br>');
+        }
+
+        function switchSummaryTab(tabId) {
+            document.querySelectorAll('.summary-content-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.querySelectorAll('.summary-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(`summary-pane-${tabId}`).classList.add('active');
+            // Find button by onclick
+            document.querySelectorAll('.summary-tab-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(`'${tabId}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function closeSummary() {
+            document.getElementById('summary-modal').style.display = 'none';
+        }
+
+        // Close modal on click outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('summary-modal');
+            if (event.target == modal) {
+                closeSummary();
+            }
+        }
     </script>
+
+    <!-- Summary Modal -->
+    <div id="summary-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeSummary()">&times;</button>
+            <div id="summary-content">
+                <!-- AI Content injected here -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>

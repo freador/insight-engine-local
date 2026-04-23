@@ -1,6 +1,6 @@
 import os
-from datetime import datetime
-from sqlalchemy import create_engine, Table, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, MetaData, select, update, insert
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine, Table, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, MetaData, select, update, insert, func
 from sqlalchemy.exc import IntegrityError
 
 # Configuration - Using SQLite for a lightweight local setup
@@ -71,6 +71,41 @@ def get_sources():
         query = select(sources)
         return conn.execute(query).fetchall()
 
+def get_sources_with_counts():
+    """Get all configured sources with their item counts from raw_content."""
+    with engine.connect() as conn:
+        all_sources = conn.execute(select(sources)).fetchall()
+        results = []
+        for s in all_sources:
+            s_dict = dict(s._mapping)
+            
+            # Reconstruct display_name like pipeline.py does
+            if s.name:
+                display_name = s.name
+            elif "@" in s.url: # Capture @Handle for YouTube
+                display_name = s.url.split("@")[-1].split('/')[0]
+                display_name = f"@{display_name}"
+            else:
+                display_name = s.url.split('//')[-1].split('/')[0].replace('www.', '')
+            
+            # Reconstruct source string like collectors do
+            if s.type == 'RSS': source_str = display_name
+            else: source_str = f"{s.type}: {display_name}"
+            
+            # Count items in raw_content where source matches exactly
+            count_stmt = select(func.count(raw_content.c.id)).where(raw_content.c.source == source_str)
+            count = conn.execute(count_stmt).scalar()
+            
+            # Fallback to URL matching if count is 0 (for old data or inconsistencies)
+            if count == 0:
+                clean_url = s.url.replace("https://", "").replace("http://", "").replace("www.", "").rstrip("/")
+                count_stmt_fallback = select(func.count(raw_content.c.id)).where(raw_content.c.url.like(f"%{clean_url}%"))
+                count = conn.execute(count_stmt_fallback).scalar()
+            
+            s_dict['article_count'] = count
+            results.append(s_dict)
+        return results
+
 def add_source(url, source_type, category="General", limit=10, name=None):
     """Add a new source."""
     with engine.connect() as conn:
@@ -81,6 +116,13 @@ def add_source(url, source_type, category="General", limit=10, name=None):
             return True
         except IntegrityError:
             return False
+
+def update_source(source_id, **kwargs):
+    """Update an existing source."""
+    with engine.connect() as conn:
+        stmt = update(sources).where(sources.c.id == source_id).values(**kwargs)
+        conn.execute(stmt)
+        conn.commit()
 
 def delete_source(source_id):
     """Remove a source and all its associated content/insights."""
@@ -156,23 +198,44 @@ def mark_as_read(insight_id):
         conn.commit()
 
 def get_dashboard_data():
-    """Get processed insights joined with raw content, sorted by score."""
+    """Get processed insights joined with raw content, sorted by score. Limited to 5 days."""
+    five_days_ago = datetime.utcnow() - timedelta(days=5)
     with engine.connect() as conn:
         query = select(
             processed_insights.c.id,
             processed_insights.c.summary,
             processed_insights.c.relevance_score,
+            processed_insights.c.created_at,
             raw_content.c.title,
             raw_content.c.url,
             raw_content.c.source,
-            raw_content.c.published_at
+            func.coalesce(raw_content.c.published_at, raw_content.c.created_at).label('published_at')
         ).select_from(
             processed_insights.join(raw_content, processed_insights.c.raw_id == raw_content.c.id)
         ).where(
-            processed_insights.c.is_read == False
+            processed_insights.c.is_read == False,
+            func.coalesce(raw_content.c.published_at, raw_content.c.created_at) >= five_days_ago
         ).order_by(
             processed_insights.c.relevance_score.desc(),
             processed_insights.c.created_at.desc()
+        )
+        result = conn.execute(query)
+        return result.fetchall()
+
+def get_recent_insights(hours=24):
+    """Get insights from the last N hours for summarization."""
+    since = datetime.utcnow() - timedelta(hours=hours)
+    with engine.connect() as conn:
+        query = select(
+            processed_insights.c.summary,
+            raw_content.c.title,
+            raw_content.c.url,
+            raw_content.c.source,
+            raw_content.c.created_at
+        ).select_from(
+            processed_insights.join(raw_content, processed_insights.c.raw_id == raw_content.c.id)
+        ).where(
+            processed_insights.c.created_at >= since
         )
         result = conn.execute(query)
         return result.fetchall()
