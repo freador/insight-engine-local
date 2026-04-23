@@ -21,9 +21,9 @@ CATEGORY_PROMPTS = {
         High Score (8-10): Something that changes how I code today.
     """,
     "News": """
-        Focus: Brazilian national news and specifically news from SOUTH BRAZIL (Rio Grande do Sul, Santa Catarina, Paraná).
+        Focus: Major national and international news, political shifts, and economic impacts.
         Anti-Focus: ABSOLUTELY NO gossip, soap operas (novelas), celebrities, or clickbait.
-        High Score (8-10): Critical infrastructure, political shifts, or major economic impact in Brazil/South.
+        High Score (8-10): Critical infrastructure, policy changes, or major global events.
     """,
     "Finance": """
         Focus: Market shifts, interest rates (SELIC), new investment instruments, and macroeconomic policy.

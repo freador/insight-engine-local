@@ -2,7 +2,7 @@
 
 O **InsightEngine** é um rastreador de notícias e agregador de informações inteligente, projetado para transformar o caos da internet em conhecimento estruturado. Ele combina coleta multi-fonte (RSS, YouTube, GitHub, Web Scraping) com o poder do processamento de linguagem natural local via **Ollama**.
 
-![Mockup do InsightEngine](https://img.shields.io/badge/Status-Ativo-brightgreen?style=for-the-badge)
+![InsightEngine Real Dashboard](assets/real_dashboard.png)
 ![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
 ![Ollama Support](https://img.shields.io/badge/AI-Ollama%20(Llama3)-orange?style=for-the-badge)
 
